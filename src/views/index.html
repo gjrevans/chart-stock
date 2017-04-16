@@ -3,24 +3,57 @@
 {% block content %}
 <div class="container-fluid mt-3">
 	<div class="row">
-		<div class="col-md-12">
-			<h3>Page Title</h3>
-			<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean felis purus, tempus quis dui non, ullamcorper facilisis dolor. Nulla odio tortor, eleifend nec justo non, semper sagittis risus. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Ut porttitor lacus sodales sem scelerisque, cursus sagittis massa posuere. In eget bibendum diam, non blandit ligula. Pellentesque dignissim mattis mauris sed interdum. Praesent mi mauris, auctor et nibh vitae, varius mollis felis. Donec placerat auctor nisl, at gravida orci feugiat a. Quisque ornare erat luctus urna rutrum finibus. Sed auctor, nisi vitae iaculis commodo, augue nunc viverra diam, eu iaculis massa justo non diam.</p>
+		<div class="col-md-8 offset-md-2">
+			{{ pageTitle }}
+			<canvas id="myChart" class="mb-3"></canvas>
 		</div>
 	</div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="/socket.io/socket.io.js"></script>
-<script>
-  var socket = io.connect();
-  socket.on('news', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-  });
+<script type="text/javascript">
+/* -- Chart -- */
+var data = {{ stocks | dump | safe }};
+
+var ctx = document.getElementById('myChart').getContext('2d');
+
+var data = {
+    labels: data,
+    datasets: [
+        {
+            label: "My First dataset",
+            fill: false,
+            lineTension: 0.1,
+            backgroundColor: "rgba(75,192,192,0.4)",
+            borderColor: "rgba(75,192,192,1)",
+            borderJoinStyle: 'miter',
+            pointBorderColor: "rgba(75,192,192,1)",
+            pointBackgroundColor: "#fff",
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "rgba(75,192,192,1)",
+            pointHoverBorderColor: "rgba(220,220,220,1)",
+            pointHoverBorderWidth: 2,
+            pointRadius: 1,
+            pointHitRadius: 10,
+            data: data,
+            spanGaps: false,
+        }
+    ]
+};
+
+var myLineChart = new Chart(ctx, {
+    type: 'line',
+    data: data
+});
 </script>
 
-<!-- Use this to insert JS into a page -->
-<!-- Important to put JS here so that JQUERY is available to the page -->
+<script type="text/javascript">
+/* -- Socket Evenets -- */
+$(function(){
+	var socket = io.connect();
+});
+</script>
+
 {% endblock %}

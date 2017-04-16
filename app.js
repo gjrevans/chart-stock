@@ -23,13 +23,6 @@ var express         = require('express'),
 var server  = require('http').Server(app);
 var io      = require('socket.io')(server);
 
-io.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
-  });
-});
-
 // Mongoose
 mongoose.connect(process.env.MONGO_URI);
 var db = mongoose.connection;
@@ -140,6 +133,22 @@ function alreadyAuthenticated(req, res, next){
 models = new Models();
 routes = new Routes(models);
 
+
+/* -- Socket IO Routes -- */
+var connections = [];
+io.on('connection', function (socket) {
+    // Track New Connections
+    connections.push(socket);
+    console.log('Connected: %s active connections', connections.length);
+
+    // Track Disconnections
+    socket.on('disconnect', function (data){
+        connections.splice(connections.indexOf(data), 1);
+        console.log('Disconnected: %s active connections', connections.length);
+
+    });
+});
+
 /* -- User Routes -- */
 app.get('/users/register', alreadyAuthenticated, routes.users.register);
 app.post('/users/register', routes.users.createAccount);
@@ -148,7 +157,7 @@ app.post('/users/login', passport.authenticate('local', {successRedirect:'/', fa
 app.get('/users/logout', routes.users.logout);
 
 /* -- Location Routes -- */
-app.get('/', routes.pages.index);
+app.get('/', routes.stocks.index);
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
