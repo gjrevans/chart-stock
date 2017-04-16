@@ -5,22 +5,45 @@ var StockRoutes = function(appmodels){
 };
 
 StockRoutes.prototype.index = function(req, res) {
-    // Set the request options
     var options = {};
-    options.stockName = 'AAPL';
 
     // Set the breadcrumbs
     req.breadcrumbs('All Stocks', '/');
 
-    models.stock.getStockByName(options, function(err, stockData){
-        var adjustedStock = stockData.map(function(element){
-             return [element[0], element[3]];
-        });
+    // Find all the stocks
+    models.stock.getStocks(options, function(err, stockData) {
+        if(err) throw err;
 
         res.render('index.html', {
             breadcrumbs: req.breadcrumbs(),
             page: {title: 'Page Title'},
-            stocks: adjustedStock
+            stocks: stockData
+        });
+    });
+}
+
+StockRoutes.prototype.addStock = function(req, res) {
+    // Create Route Options
+    var options = {};
+    options.stockName = req.body.stock;
+
+    // Get the stock from Qualid API
+    models.stock.getStockByName(options, function(err, stockData) {
+        if (err) throw err;
+
+        var data = stockData.map(function(element){
+            return {date: element[0], value: element[3]}
+        });
+
+        var newStock = new models.stock.Stock({
+            stockName: options.stockName,
+            data: data
+        });
+        
+        models.stock.addStock(newStock, function(err, foundStock){
+            if(err) throw err;
+
+            res.redirect('/');
         });
     });
 }

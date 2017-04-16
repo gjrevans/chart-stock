@@ -158,6 +158,8 @@ app.get('/users/logout', routes.users.logout);
 
 /* -- Location Routes -- */
 app.get('/', routes.stocks.index);
+app.post('/', routes.stocks.addStock);
+
 
 // Catch 404 and forward to error handler
 app.use(function(req, res, next) {
