@@ -19,6 +19,17 @@ var express         = require('express'),
     Models          = require("./models"),
     app             = express();
 
+// Socket IO Server
+var server  = require('http').Server(app);
+var io      = require('socket.io')(server);
+
+io.on('connection', function (socket) {
+  socket.emit('news', { hello: 'world' });
+  socket.on('my other event', function (data) {
+    console.log(data);
+  });
+});
+
 // Mongoose
 mongoose.connect(process.env.MONGO_URI);
 var db = mongoose.connection;
@@ -158,7 +169,8 @@ app.use(function(err, req, res, next) {
 });
 
 // Start our application
-app.listen(port);
+//server.listen(port);
+server.listen(port);
 console.log('Server running on port ' + port);
 
 module.exports = app;

@@ -12,6 +12,15 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect();
+  socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+</script>
+
 <!-- Use this to insert JS into a page -->
 <!-- Important to put JS here so that JQUERY is available to the page -->
 {% endblock %}
