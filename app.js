@@ -159,6 +159,8 @@ app.get('/users/logout', routes.users.logout);
 /* -- Location Routes -- */
 app.get('/', routes.stocks.index);
 app.post('/', routes.stocks.addStock);
+app.delete('/:id', routes.stocks.removeStock);
+
 
 
 // Catch 404 and forward to error handler

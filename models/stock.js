@@ -21,11 +21,13 @@ var StockSchema = mongoose.Schema({
     }]
 });
 
-StockModel.prototype.addStock = function(newStock, callback) {
-    newStock.save(callback);
+StockModel.prototype.addStock = function(options, callback) {
+    options.newStock.save(callback);
 }
 
-StockModel.prototype.removeStock = function(id, callback) {
+StockModel.prototype.removeStock = function(options, callback) {
+    var id = options.id;
+
     if(!id || !validator.isMongoId(id)){
         return callback("invalidId", false);
     }
@@ -39,21 +41,24 @@ StockModel.prototype.getStocks = function(options, callback){
 
 StockModel.prototype.getStockByName = function(options, callback){
     var stock = options.stockName;
-    var start_date = '2017-01-01';
-    var end_date = '2017-03-01';
+    var start_date = options.startDate;
+    var end_date = options.endDate;
 
-    var url = process.env.QUANDL_BASE_URL + stock + '.json?order=asc&start_date=' + start_date + '&end_date=' + end_date
+    var url = process.env.QUANDL_BASE_URL + stock + '.json'
 
-    axios.get(url)
-        .then(response => {
-            console.log(response);
-            if(response.code === '400'){
-                callback('something went wrong')
-            } else {
+    axios.get(url, {
+            params: {
+                api_key: process.env.QUANDL_API_KEY,
+                order: 'asc',
+                start_date: start_date,
+                end_date: end_date
+            }
+        }).then(function(response) {
+            if (response.status === 200) {
                 callback(null, response.data.dataset.data);
             }
         }
-        ).catch(error => {
+        ).catch(function(error) {
             callback(error);
         });
 }

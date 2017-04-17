@@ -3,13 +3,20 @@
 {% block content %}
 <div class="container-fluid mt-3">
 	<div class="row">
-		<div class="col-md-8 offset-md-2">
+		<div class="col-md-8">
 			{{ pageTitle }}
 			<canvas id="myChart" class="mb-3"></canvas>
 		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-4 offset-md-4">
+		<div class="col-md-4">
+			<h3>Tracking Stocks</h3>
+			{% for stock in stocks %}
+			<div class="mb-1">
+				<i class="fa fa-times fa-fw ml-1 text-danger remove-stock" data-id="{{ stock._id }}"></i>
+				{{ stock.stockName }}
+			</div>
+			{% endfor %}
+			<hr>
+			<h3>Add a Stock</h3>
 			<form id="stockForm" action="/" method="post">
 				<div class="form-group">
 					<input id="stock" type="text" name="stock" value="" class="form-control">
@@ -26,6 +33,23 @@
 {% block extra_js %}
 {# Stock Form #}
 <script type="text/javascript">
+$(".remove-stock").on("click", function() {
+	var stockId = $(this).data('id');
+
+    $.ajax({
+        method: "DELETE",
+        url: "/" + stockId,
+		data: {},
+        dataType: 'json',
+        success: function() {
+			location.reload();
+        },
+        error: function(error) {
+            alert('error');
+        }
+    });
+});
+
 $(function(){
 	var $stockForm = $('#stockForm');
 	var $stock = $('#stock');
