@@ -42,7 +42,6 @@ StockModel.prototype.getStocks = function(options, callback){
 StockModel.prototype.getStockByName = function(options, callback){
     var stock = options.stockName;
     var start_date = options.startDate;
-    var end_date = options.endDate;
 
     var url = process.env.QUANDL_BASE_URL + stock + '.json'
 
@@ -50,8 +49,7 @@ StockModel.prototype.getStockByName = function(options, callback){
             params: {
                 api_key: process.env.QUANDL_API_KEY,
                 order: 'asc',
-                start_date: start_date,
-                end_date: end_date
+                start_date: start_date
             }
         }).then(function(response) {
             if (response.status === 200) {

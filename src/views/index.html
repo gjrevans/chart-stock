@@ -3,9 +3,15 @@
 {% block content %}
 <div class="container-fluid mt-3">
 	<div class="row">
-		<div class="col-md-8">
-			{{ pageTitle }}
+		<div class="col-md-8 text-center">
+			{% if stocks.length > 0 %}
 			<canvas id="myChart" class="mb-3"></canvas>
+			{% else %}
+			<div class="mt-3 mb-3">
+				<h3>No Active Stocks</h3>
+				<p>No one has added a stock yet. Please add a stock from the stock picker.</p>
+			</div>
+			{% endif %}
 		</div>
 		<div class="col-md-4">
 			<h3>Tracking Stocks</h3>
@@ -31,11 +37,11 @@
 {% endblock %}
 
 {% block extra_js %}
-{# Stock Form #}
 <script type="text/javascript">
+/* -- Stock Manager -- */
 $(function(){
 	var socket = io.connect();
-	
+
 	$('#stockForm').on('submit', function(e) {
 		e.preventDefault();
 		var stockName = $('#stock').val();
@@ -48,7 +54,7 @@ $(function(){
 				socket.emit('add stock', data.stockName);
 			},
 			error: function(error) {
-				alert('error');
+				alert('That doesn\'t look like a valid stock symbol!');
 			}
 		});
 	});
@@ -69,7 +75,7 @@ $(function(){
 				socket.emit('remove stock', stockId);
 	        },
 	        error: function(error) {
-	            alert('error');
+	            alert('Something went wrong, please try again!');
 	        }
 	    });
 	});

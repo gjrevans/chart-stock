@@ -7,16 +7,13 @@ var StockRoutes = function(appmodels){
 StockRoutes.prototype.index = function(req, res) {
     var options = {};
 
-    // Set the breadcrumbs
-    req.breadcrumbs('All Stocks', '/');
-
     // Find all the stocks
     models.stock.getStocks(options, function(error, stockData) {
         if(error) throw error;
 
         res.render('index.html', {
             breadcrumbs: req.breadcrumbs(),
-            page: {title: 'Page Title'},
+            page: {title: 'Chart Stocks'},
             stocks: stockData
         });
     });
@@ -27,7 +24,6 @@ StockRoutes.prototype.addStock = function(req, res) {
     var options = {};
     options.stockName = req.params.stockName.toUpperCase();
     options.startDate = '2017-01-01';
-    options.endDate = '2017-03-01';
 
     // Get the stock from Qualid API
     models.stock.getStockByName(options, function(error, stockData) {

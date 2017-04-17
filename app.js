@@ -148,11 +148,11 @@ io.on('connection', function (socket) {
     });
 
     socket.on('remove stock', function(data){
-        io.sockets.emit('stock removed', {stock: data});
+        io.sockets.emit('stock removed', { stock: data });
     });
 
     socket.on('add stock', function(data){
-        io.sockets.emit('stock added', {stock: data});
+        io.sockets.emit('stock added', { stock: data });
     });
 });
 
