@@ -44,6 +44,14 @@
 {% block extra_js %}
 <script type="text/javascript">
 $(document).ready(function(){
+	var data = {{ stocks | dump | safe }};
+	var datasets = [];
+
+	// Generates a hex value
+	function createHex() {
+		return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	}
+
 	/* -- Stock Manager -- */
 	$(function(){
 		var socket = io.connect();
@@ -57,7 +65,10 @@ $(document).ready(function(){
 				data: {},
 				dataType: 'json',
 				success: function() {
-					$('#stock').val('');
+					if (datasets.length > 0) {
+						$('#pageContent').prepend('<div class="alert alert-success alert-dismissable fade in show" role="alert">' + stockName.toUpperCase() + ' was successfully added!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times"></i></button></div>');
+						$('#stock').val('');
+					}
 				},
 				error: function(error) {
 					alert('That doesn\'t look like a valid stock symbol!');
@@ -73,6 +84,8 @@ $(document).ready(function(){
 			var color = createHex();
 			var name = data.stock.stockName;
 			var id = data.stock._id;
+
+			// Add the stock to the dataset array
 			myLineChart.data.datasets.push({
 				label: name,
 				fill: false,
@@ -92,17 +105,22 @@ $(document).ready(function(){
 			});
 			myLineChart.update();
 
+			// Remove the stock from the stock list
 			$('#currentStocks').append('<div class="mb-1 remove-stock" data-id="' + id + '"><i class="fa fa-times fa-fw ml-1 mr-1 text-danger"></i>' + name + '</div>')
 		});
 
 		$('#currentStocks').on('click', '.remove-stock', function(e) {
-			var stockId = $(this).data('id');
+			var id = $(this).data('id');
+			var stockName = $('[data-id=' + id + ']').text();
 
 		    $.ajax({
 		        method: "DELETE",
-		        url: "/stocks/" + stockId,
+		        url: "/stocks/" + id,
 				data: {},
 		        dataType: 'json',
+				success: function() {
+					$('#pageContent').prepend('<div class="alert alert-danger alert-dismissable fade in show" role="alert">' + stockName.toUpperCase() + ' was successfully removed!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times"></i></button></div>');
+				},
 		        error: function(error) {
 		            alert('Something went wrong, please try again!');
 		        }
@@ -113,24 +131,18 @@ $(document).ready(function(){
 			var id = data.stock._id;
 			var name = data.stock.stockName;
 
+			// Remove the stock from the data set array
 			myLineChart.data.datasets.forEach(function(dataset, index){
 				if(dataset.label === name) {
-					myLineChart.data.datasets.splice(index, 1)
+					myLineChart.data.datasets.splice(index, 1);
+					$('[data-id=' + id + ']').remove();
 				}
 			});
 			myLineChart.update();
-			$('[data-id=' + id + ']').remove();
 		});
 	});
 
-	/* -- Chart -- */
-	var data = {{ stocks | dump | safe }};
-	var datasets = [];
-
-	function createHex() {
-	    return '#' + Math.floor(Math.random() * 16777215).toString(16);
-	}
-
+	/* -- Charts -- */
 	if(data.length) {
 		data.forEach(function(stock, index){
 			var color = createHex();
@@ -152,7 +164,6 @@ $(document).ready(function(){
 		        data: stock.data.map(element => element.value)
 		    });
 		});
-
 
 		var ctx = document.getElementById('myChart').getContext('2d');
 		var data = {
