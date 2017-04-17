@@ -49,7 +49,8 @@ StockModel.prototype.getStockByName = function(options, callback){
             params: {
                 api_key: process.env.QUANDL_API_KEY,
                 order: 'asc',
-                start_date: start_date
+                start_date: start_date,
+                collapse: 'weekly'
             }
         }).then(function(response) {
             if (response.status === 200) {

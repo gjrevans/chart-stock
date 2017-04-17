@@ -56,7 +56,7 @@ app.use(breadcrumbs.setHome());
 
 // Mount the breadcrumbs at `/admin`
 app.use('/', breadcrumbs.setHome({
-  name: 'Home',
+  name: 'All Stocks',
   url: '/'
 }));
 
