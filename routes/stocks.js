@@ -1,7 +1,9 @@
 var models;
+var io;
 
-var StockRoutes = function(appmodels){
+var StockRoutes = function(appmodels, appIo) {
     models = appmodels;
+    io = appIo;
 };
 
 StockRoutes.prototype.index = function(req, res) {
@@ -47,6 +49,9 @@ StockRoutes.prototype.addStock = function(req, res) {
                 if(error) {
                     return res.status(500).json({status: 500, error: true, message: error });
                 }
+
+                // If successfuly fire io event and return response
+                io.sockets.emit('stock added', { stock: addedStock });
                 res.status(200).json({
                     status: 200,
                     error: false,
@@ -68,6 +73,9 @@ StockRoutes.prototype.removeStock = function(req, res){
             if(error) {
                 return res.status(500).json({status: 500, error: true, message: error });
             }
+
+            // If successfuly fire io event and return response
+            io.sockets.emit('stock removed', { stock: removedStock });
             res.status(200).json({
                 status: 200,
                 error: false,

@@ -129,10 +129,6 @@ function alreadyAuthenticated(req, res, next){
         return next();
     }
 }
-// Initialize Routes
-models = new Models();
-routes = new Routes(models);
-
 
 /* -- Socket IO Routes -- */
 var connections = [];
@@ -146,15 +142,11 @@ io.on('connection', function (socket) {
         connections.splice(connections.indexOf(data), 1);
         console.log('Disconnected: %s active connections', connections.length);
     });
-
-    socket.on('remove stock', function(data){
-        io.sockets.emit('stock removed', { stock: data });
-    });
-
-    socket.on('add stock', function(data){
-        io.sockets.emit('stock added', { stock: data });
-    });
 });
+
+// Initialize Routes
+models = new Models();
+routes = new Routes(models, io);
 
 /* -- User Routes -- */
 app.get('/users/register', alreadyAuthenticated, routes.users.register);
