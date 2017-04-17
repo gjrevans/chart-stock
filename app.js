@@ -145,7 +145,14 @@ io.on('connection', function (socket) {
     socket.on('disconnect', function (data){
         connections.splice(connections.indexOf(data), 1);
         console.log('Disconnected: %s active connections', connections.length);
+    });
 
+    socket.on('remove stock', function(data){
+        io.sockets.emit('stock removed', {stock: data});
+    });
+
+    socket.on('add stock', function(data){
+        io.sockets.emit('stock added', {stock: data});
     });
 });
 
@@ -158,8 +165,8 @@ app.get('/users/logout', routes.users.logout);
 
 /* -- Location Routes -- */
 app.get('/', routes.stocks.index);
-app.post('/', routes.stocks.addStock);
-app.delete('/:id', routes.stocks.removeStock);
+app.post('/stocks/:stockName', routes.stocks.addStock);
+app.delete('/stocks/:id', routes.stocks.removeStock);
 
 
 

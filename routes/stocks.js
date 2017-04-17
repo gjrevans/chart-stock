@@ -25,16 +25,17 @@ StockRoutes.prototype.index = function(req, res) {
 StockRoutes.prototype.addStock = function(req, res) {
     // Create Route Options
     var options = {};
-    options.stockName = req.body.stock.toUpperCase();
+    options.stockName = req.params.stockName.toUpperCase();
     options.startDate = '2017-01-01';
     options.endDate = '2017-03-01';
 
     // Get the stock from Qualid API
     models.stock.getStockByName(options, function(error, stockData) {
         if (error) {
-            req.flash('errorMessages', 'That is not a valid stock symbol!');
-            return res.redirect('/');
+            return res.status(404).json({status: 404, error: true, message: 'Bad Request'});
         }
+
+        // Create the new Stock
         var data = stockData.map(function(element){
             return { date: element[0], value: element[3] }
         });
@@ -44,10 +45,21 @@ StockRoutes.prototype.addStock = function(req, res) {
             data: data
         });
 
-        models.stock.addStock(options, function(error, addedStock) {
-            if(error) throw error
-            res.redirect('/');
-        });
+        // Add the stock to the database
+        if (options && options.stockName){
+            models.stock.addStock(options, function(error, addedStock) {
+                if(error) {
+                    return res.status(500).json({status: 500, error: true, message: error });
+                }
+                res.status(200).json({
+                    status: 200,
+                    error: false,
+                    message: "Successfuly Added"
+                });
+            });
+        } else {
+            return res.status(404).json({status: 404, error: true, message: 'Bad Request'});
+        }
     });
 }
 
