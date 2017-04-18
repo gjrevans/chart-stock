@@ -44,138 +44,135 @@
 {% block extra_js %}
 <script type="text/javascript">
 $(document).ready(function(){
-	var data = {{ stocks | dump | safe }};
+	var stocks = {{ stocks | dump | safe }};
+	var socket = io.connect();
 	var datasets = [];
 
-	// Generates a hex value
-	function createHex() {
-		return '#' + Math.floor(Math.random() * 16777215).toString(16);
-	}
-
-	/* -- Stock Manager -- */
-	$(function(){
-		var socket = io.connect();
-
-		$('#stockForm').on('submit', function(e) {
-			e.preventDefault();
-			var stockName = $('#stock').val();
-			$.ajax({
-				method: "POST",
-				url: "/stocks/" + stockName,
-				data: {},
-				dataType: 'json',
-				success: function() {
-					if (datasets.length > 0) {
-						$('#pageContent').prepend('<div class="alert alert-success alert-dismissable fade in show" role="alert">' + stockName.toUpperCase() + ' was successfully added!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times"></i></button></div>');
-						$('#stock').val('');
-					}
-				},
-				error: function(error) {
-					alert('That doesn\'t look like a valid stock symbol!');
-				}
-			});
-		});
-
-		socket.on('stock added', function(data) {
-			if (datasets.length === 0) {
-				return location.reload();
-			}
-
-			var color = createHex();
-			var name = data.stock.stockName;
-			var id = data.stock._id;
-
-			// Add the stock to the dataset array
-			myLineChart.data.datasets.push({
-				label: name,
-				fill: false,
-				lineTension: 0.1,
-				backgroundColor: color,
-				borderColor: color,
-				borderCapStyle: 'butt',
-				borderDash: [],
-				borderDashOffset: 0.0,
-				borderJoinStyle: 'miter',
-				pointBorderColor: color,
-				pointBackgroundColor: "#fff",
-				pointBorderWidth: 1,
-				pointHoverRadius: 5,
-				pointHoverBackgroundColor: color,
-				data: data.stock.data.map(element => element.value)
-			});
-			myLineChart.update();
-
-			// Remove the stock from the stock list
-			$('#currentStocks').append('<div class="mb-1 remove-stock" data-id="' + id + '"><i class="fa fa-times fa-fw ml-1 mr-1 text-danger"></i>' + name + '</div>')
-		});
-
-		$('#currentStocks').on('click', '.remove-stock', function(e) {
-			var id = $(this).data('id');
-			var stockName = $('[data-id=' + id + ']').text();
-
-		    $.ajax({
-		        method: "DELETE",
-		        url: "/stocks/" + id,
-				data: {},
-		        dataType: 'json',
-				success: function() {
-					$('#pageContent').prepend('<div class="alert alert-danger alert-dismissable fade in show" role="alert">' + stockName.toUpperCase() + ' was successfully removed!<button type="button" class="close" data-dismiss="alert" aria-label="Close"><i class="fa fa-times"></i></button></div>');
-				},
-		        error: function(error) {
-		            alert('Something went wrong, please try again!');
-		        }
-		    });
-		});
-
-		socket.on('stock removed', function(data) {
-			var id = data.stock._id;
-			var name = data.stock.stockName;
-
-			// Remove the stock from the data set array
-			myLineChart.data.datasets.forEach(function(dataset, index){
-				if(dataset.label === name) {
-					myLineChart.data.datasets.splice(index, 1);
-					$('[data-id=' + id + ']').remove();
-				}
-			});
-			myLineChart.update();
-		});
-	});
-
-	/* -- Charts -- */
-	if(data.length) {
-		data.forEach(function(stock, index){
-			var color = createHex();
-			datasets.push({
-		        label: stock.stockName,
-				fill: false,
-				lineTension: 0.1,
-				backgroundColor: color,
-				borderColor: color,
-				borderCapStyle: 'butt',
-				borderDash: [],
-				borderDashOffset: 0.0,
-				borderJoinStyle: 'miter',
-				pointBorderColor: color,
-				pointBackgroundColor: "#fff",
-				pointBorderWidth: 1,
-				pointHoverRadius: 5,
-				pointHoverBackgroundColor: color,
-		        data: stock.data.map(element => element.value)
-		    });
+	// Draw the initial chart
+	if (stocks.length) {
+		stocks.forEach(function(stock, index){
+			datasets.push(addStockToChart(stock.stockName, createHex(), stock.data));
 		});
 
 		var ctx = document.getElementById('myChart').getContext('2d');
 		var data = {
-		    labels: data[0].data.map(element => element.date),
-		    datasets: datasets
+			labels: stocks[0].data.map(element => element.date),
+			datasets: datasets
 		};
 
 		var myLineChart = new Chart(ctx, {
-		    type: 'line',
-		    data: data
+			type: 'line',
+			data: data
 		});
 	}
+
+	// Create a Random Hex Value
+	function createHex() {
+		return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	}
+
+	// Add stocks to the dataset object
+	function addStockToChart(name, color, stockData) {
+		return {
+			label: name,
+			fill: false,
+			lineTension: 0.1,
+			backgroundColor: color,
+			borderColor: color,
+			borderCapStyle: 'butt',
+			borderDash: [],
+			borderDashOffset: 0.0,
+			borderJoinStyle: 'miter',
+			pointBorderColor: color,
+			pointBackgroundColor: "#fff",
+			pointBorderWidth: 1,
+			pointHoverRadius: 5,
+			pointHoverBackgroundColor: color,
+			data: stockData.map(element => element.value)
+		};
+	}
+
+	function removeStockFromChart(chartData, stockName) {
+		for (var i = 0; i < chartData.length; i++) {
+			if (chartData[i].label === stockName) {
+				chartData.splice(i, 1);
+				break;
+			}
+		}
+	}
+
+	// Update chart to reflect added stock
+	socket.on('stock added', function(data) {
+		if (datasets.length === 0) {
+			return location.reload();
+		}
+
+		myLineChart.data.datasets.push(addStockToChart(data.stock.stockName, createHex(), data.stock.data));
+		myLineChart.update();
+
+		// Remove the stock from the stock list
+		$('#currentStocks').append('<div class="mb-1 remove-stock" data-id="' + data.stock._id + '"><i class="fa fa-times fa-fw ml-1 mr-1 text-danger"></i>' + data.stock.stockName + '</div>')
+	});
+
+	// Update chart to reflect removed stock
+	socket.on('stock removed', function(data) {
+		removeStockFromChart(myLineChart.data.datasets, data.stock.stockName);
+		myLineChart.update();
+	});
+
+	$('#stockForm').on('submit', function(e) {
+		e.preventDefault();
+
+		var stockName = $('#stock').val().toUpperCase();
+		$('#stock').val('');
+
+		$.ajax({
+			method: "POST",
+			url: "/stocks/" + stockName,
+			data: {},
+			dataType: 'json',
+			success: function() {
+				if (datasets.length > 0) {
+					createNewAlert('success', stockName + ' was successfully added!');
+				}
+			},
+			error: function(error) {
+				var errorMessage;
+                    if (error.responseJSON && error.responseJSON.message) {
+                        errorMessage = error.responseJSON.message;
+                    } else {
+                        errorMessage = 'Something went wrong, please try again!';
+                    }
+				alert(errorMessage);
+			}
+		});
+	});
+
+	$('#currentStocks').on('click', '.remove-stock', function(e) {
+		var id = $(this).data('id');
+		var stockName = $('[data-id=' + id + ']').text().toUpperCase();
+		$('#stock').val('');
+
+	    $.ajax({
+	        method: "DELETE",
+	        url: "/stocks/" + id,
+			data: {},
+	        dataType: 'json',
+			success: function() {
+				createNewAlert('danger', stockName + ' was successfully removed!');
+				$('[data-id=' + id + ']').remove();
+			},
+	        error: function(error) {
+				var errorMessage;
+                    if (error.responseJSON && error.responseJSON.message) {
+                        errorMessage = error.responseJSON.message;
+                    } else {
+                        errorMessage = 'Something went wrong, please try again!';
+                    }
+				alert(errorMessage);
+	        }
+	    });
+	});
 });
 </script>
 {% endblock %}

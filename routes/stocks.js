@@ -30,7 +30,7 @@ StockRoutes.prototype.addStock = function(req, res) {
     // Get the stock from Qualid API
     models.stock.getStockByName(options, function(error, stockData) {
         if (error) {
-            return res.status(404).json({status: 404, error: true, message: 'Bad Request'});
+            return res.status(404).json({status: 404, error: true, message: 'Sorry, we weren\'t able to find that stock!'});
         }
 
         // Create the new Stock
@@ -47,7 +47,10 @@ StockRoutes.prototype.addStock = function(req, res) {
         if (options && options.stockName){
             models.stock.addStock(options, function(error, addedStock) {
                 if(error) {
-                    return res.status(500).json({status: 500, error: true, message: error });
+                    if(error.name === 'ValidationError') {
+                        error.message = 'Looks like that stock has already been added!'
+                    }
+                    return res.status(500).json({status: 500, error: true, message: error.message });
                 }
 
                 // If successfuly fire io event and return response
@@ -59,7 +62,7 @@ StockRoutes.prototype.addStock = function(req, res) {
                 });
             });
         } else {
-            return res.status(404).json({status: 404, error: true, message: 'Bad Request'});
+            return res.status(404).json({status: 404, error: true, message: 'Please provide a stock name!'});
         }
     });
 }

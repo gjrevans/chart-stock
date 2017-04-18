@@ -1,6 +1,7 @@
-var axios = require('axios');
-var mongoose    = require('mongoose');
-var validator   = require('validator');
+var axios           = require('axios');
+var mongoose        = require('mongoose');
+var uniqueValidator = require('mongoose-unique-validator');
+var validator       = require('validator');
 
 var StockModel = function(){
     Stock = this.Stock = mongoose.model('Stock', StockSchema);
@@ -8,18 +9,14 @@ var StockModel = function(){
 };
 
 var StockSchema = mongoose.Schema({
-    stockName: {
-        type: String
-    },
+    stockName: { type: String, unique: true },
     data: [{
-        date: {
-            type: String
-        },
-        value: {
-            type: Number
-        }
+        date: { type: String },
+        value: { type: Number }
     }]
 });
+
+StockSchema.plugin(uniqueValidator);
 
 StockModel.prototype.addStock = function(options, callback) {
     options.newStock.save(callback);
